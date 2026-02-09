@@ -15,14 +15,12 @@ class ReelService {
           .from('reels')
           .select('*, profiles(*)');
 
-      // Filter nur anwenden, wenn categoryId nicht null und nicht leer ist
       if (categoryId != null && categoryId != 'null' && categoryId.isNotEmpty) {
         query = query.eq('category_id', categoryId);
       }
 
-      // Sortierung: Wir nutzen created_at als Fallback, falls order_index NULL ist
       final response = await query
-          .order('created_at', ascending: false) 
+          .order('order_index', ascending: true) 
           .timeout(const Duration(seconds: 15));
           
       final List<dynamic> data = response as List;
@@ -30,7 +28,7 @@ class ReelService {
       
       return data.map((e) => ReelModel.fromJson(e)).toList();
     } catch (e) {
-      debugPrint('KRITISCH: Fehler beim Laden der Reels: $e');
+      debugPrint('Fehler beim Laden der Reels: $e');
       return [];
     }
   }
@@ -40,6 +38,7 @@ class ReelService {
     required String title,
     String? description,
     required String videoUrl,
+    String? youtubeId,
     String? thumbnailUrl,
     String? categoryId,
     int? duration,
@@ -49,6 +48,7 @@ class ReelService {
       'title': title,
       'description': description,
       'video_url': videoUrl,
+      'youtube_id': youtubeId,
       'thumbnail_url': thumbnailUrl,
       'category_id': categoryId,
       'duration': duration,

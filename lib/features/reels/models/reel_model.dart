@@ -4,6 +4,7 @@ class ReelModel {
   final String title;
   final String? description;
   final String videoUrl;
+  final String? youtubeId;
   final String? thumbnailUrl;
   final String? categoryId;
   final int? duration;
@@ -16,6 +17,7 @@ class ReelModel {
     required this.title,
     this.description,
     required this.videoUrl,
+    this.youtubeId,
     this.thumbnailUrl,
     this.categoryId,
     this.duration,
@@ -29,7 +31,8 @@ class ReelModel {
       userId: json['user_id'],
       title: json['title'],
       description: json['description'],
-      videoUrl: json['video_url'],
+      videoUrl: json['video_url'] ?? '',
+      youtubeId: json['youtube_id'],
       thumbnailUrl: json['thumbnail_url'],
       categoryId: json['category_id'],
       duration: json['duration'],

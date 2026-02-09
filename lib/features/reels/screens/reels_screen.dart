@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../profile/services/profile_service.dart';
 import '../models/reel_model.dart';
@@ -107,10 +108,9 @@ class _ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
                       },
                     ),
           
-          // Button zum Hochladen (höher positioniert)
           Positioned(
             right: 16,
-            bottom: 80, // Von 16 auf 80 erhöht
+            bottom: 80,
             child: FloatingActionButton(
               onPressed: () {
                 if (mounted) setState(() => _isScreenActive = false);
@@ -163,6 +163,7 @@ class ReelPlayer extends StatefulWidget {
 class _ReelPlayerState extends State<ReelPlayer> {
   late VideoPlayerController _videoController;
   ChewieController? _chewieController;
+  YoutubePlayerController? _youtubeController;
   bool _isInitialized = false;
   final ReelService _reelService = ReelService();
   final ProfileService _profileService = ProfileService();
@@ -183,8 +184,13 @@ class _ReelPlayerState extends State<ReelPlayer> {
     if (_isInitialized) {
       if (!widget.isScreenActive) {
         _videoController.pause();
+        _youtubeController?.pause();
       } else if (widget.autoPlay && oldWidget.isScreenActive == false) {
-        _videoController.play();
+        if (widget.reel.youtubeId == null) {
+          _videoController.play();
+        } else {
+          _youtubeController?.play();
+        }
       }
     }
   }
@@ -286,18 +292,34 @@ class _ReelPlayerState extends State<ReelPlayer> {
   }
 
   Future<void> _initializePlayer() async {
-    _videoController = VideoPlayerController.networkUrl(Uri.parse(widget.reel.videoUrl));
-    await _videoController.initialize();
+    if (widget.reel.youtubeId != null) {
+      _youtubeController = YoutubePlayerController(
+        initialVideoId: widget.reel.youtubeId!,
+        flags: YoutubePlayerFlags(
+          autoPlay: widget.autoPlay && widget.isScreenActive,
+          mute: false,
+          loop: true,
+          isLive: false,
+          forceHD: false,
+          enableCaption: true,
+        ),
+      );
+      _isInitialized = true;
+    } else {
+      _videoController = VideoPlayerController.networkUrl(Uri.parse(widget.reel.videoUrl));
+      await _videoController.initialize();
 
-    _chewieController = ChewieController(
-      videoPlayerController: _videoController,
-      autoPlay: widget.autoPlay && widget.isScreenActive,
-      looping: true,
-      showControls: true,
-      aspectRatio: 9 / 16,
-    );
+      _chewieController = ChewieController(
+        videoPlayerController: _videoController,
+        autoPlay: widget.autoPlay && widget.isScreenActive,
+        looping: true,
+        showControls: true,
+        aspectRatio: 9 / 16,
+      );
+      _isInitialized = true;
+    }
 
-    if (mounted) setState(() => _isInitialized = true);
+    if (mounted) setState(() {});
   }
 
   @override
@@ -311,7 +333,15 @@ class _ReelPlayerState extends State<ReelPlayer> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Center(child: Chewie(controller: _chewieController!)),
+        Center(
+          child: widget.reel.youtubeId != null
+              ? YoutubePlayer(
+                  controller: _youtubeController!,
+                  showVideoProgressIndicator: true,
+                  progressIndicatorColor: Colors.blueAccent,
+                )
+              : Chewie(controller: _chewieController!),
+        ),
         Positioned(
           bottom: 80,
           left: 16,
@@ -404,6 +434,7 @@ class _ReelPlayerState extends State<ReelPlayer> {
   void dispose() {
     _videoController.dispose();
     _chewieController?.dispose();
+    _youtubeController?.dispose();
     super.dispose();
   }
 }
