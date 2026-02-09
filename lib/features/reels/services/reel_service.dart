@@ -15,16 +15,18 @@ class ReelService {
           .from('reels')
           .select('*, profiles(*)');
 
-      if (categoryId != null && categoryId != 'null' && categoryId.isNotEmpty) {
+      if (categoryId != null && categoryId != 'null' && categoryId != 'all' && categoryId.isNotEmpty) {
         query = query.eq('category_id', categoryId);
       }
 
       // Filter nach Content-Typ
       if (onlyYoutube != null) {
         if (onlyYoutube) {
+          // Nur YouTube-Videos (youtube_id ist NICHT null)
           query = query.not('youtube_id', 'is', null);
         } else {
-          query = query.is_('youtube_id', null);
+          // Nur Lernvideos (youtube_id IST null)
+          query = query.filter('youtube_id', 'is', null);
         }
       }
 
