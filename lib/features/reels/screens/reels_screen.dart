@@ -13,8 +13,9 @@ import '../services/reel_service.dart';
 
 class ReelsScreen extends StatefulWidget {
   final String? categoryId;
+  final bool onlyYoutube;
 
-  const ReelsScreen({super.key, this.categoryId});
+  const ReelsScreen({super.key, this.categoryId, this.onlyYoutube = false});
 
   @override
   State<ReelsScreen> createState() => _ReelsScreenState();
@@ -64,7 +65,10 @@ class _ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
 
   Future<void> _loadReels() async {
     try {
-      final reels = await _reelService.getReels(categoryId: widget.categoryId);
+      final reels = await _reelService.getReels(
+        categoryId: widget.categoryId,
+        onlyYoutube: widget.onlyYoutube,
+      );
       if (mounted) {
         setState(() {
           _reels = reels;
@@ -91,7 +95,7 @@ class _ReelsScreenState extends State<ReelsScreen> with WidgetsBindingObserver {
           _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _reels.isEmpty
-                  ? const Center(child: Text('Keine Reels vorhanden', style: TextStyle(color: Colors.white)))
+                  ? const Center(child: Text('Keine Videos gefunden', style: TextStyle(color: Colors.white)))
                   : PageView.builder(
                       controller: _pageController,
                       scrollDirection: Axis.vertical,
@@ -254,9 +258,6 @@ class _ReelPlayerState extends State<ReelPlayer> {
         );
         _isInitialized = true;
       } else if (widget.reel.videoUrl.isNotEmpty) {
-        // Debug Log für fehlerhafte URLs
-        debugPrint('Versuche Video zu laden: ${widget.reel.videoUrl}');
-        
         _videoController = VideoPlayerController.networkUrl(Uri.parse(widget.reel.videoUrl));
         await _videoController!.initialize();
 
@@ -270,11 +271,10 @@ class _ReelPlayerState extends State<ReelPlayer> {
         _isInitialized = true;
       }
     } catch (e) {
-      debugPrint('Video-Ladefehler bei URL: ${widget.reel.videoUrl} | Fehler: $e');
       if (mounted) {
         setState(() {
           _hasError = true;
-          _isInitialized = true; // Damit der Lade-Kringel verschwindet
+          _isInitialized = true;
         });
       }
     }
@@ -319,7 +319,6 @@ class _ReelPlayerState extends State<ReelPlayer> {
                 )
               : (_chewieController != null ? Chewie(controller: _chewieController!) : const SizedBox()),
         ),
-        // Overlay-Elemente (Profile, Buttons etc.)
         Positioned(
           bottom: 80,
           left: 16,
@@ -352,17 +351,25 @@ class _ReelPlayerState extends State<ReelPlayer> {
             ],
           ),
         ),
-        // Aktions-Buttons rechts
         Positioned(
           right: 16,
           bottom: 120,
           child: Column(
             children: [
               IconButton(
-                icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border, color: _isLiked ? Colors.red : Colors.white),
-                onPressed: () {}, // Like Logik hier
+                icon: Icon(
+                  _isLiked ? Icons.favorite : Icons.favorite_border, 
+                  color: _isLiked ? Colors.red : Colors.white,
+                ),
+                iconSize: 32,
+                onPressed: () {},
               ),
-              IconButton(icon: const Icon(Icons.share, color: Colors.white), onPressed: () {}),
+              const SizedBox(height: 16),
+              IconButton(
+                icon: const Icon(Icons.share, color: Colors.white),
+                iconSize: 32,
+                onPressed: () => Share.share('Schau dir dieses Video an: ${widget.reel.videoUrl}'),
+              ),
             ],
           ),
         ),

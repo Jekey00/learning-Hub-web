@@ -7,9 +7,9 @@ import '../models/reel_model.dart';
 class ReelService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  Future<List<ReelModel>> getReels({String? categoryId}) async {
+  Future<List<ReelModel>> getReels({String? categoryId, bool? onlyYoutube}) async {
     try {
-      debugPrint('Lade Reels für Kategorie: $categoryId');
+      debugPrint('Lade Reels für Kategorie: $categoryId, nur YouTube: $onlyYoutube');
       
       var query = _supabase
           .from('reels')
@@ -17,6 +17,15 @@ class ReelService {
 
       if (categoryId != null && categoryId != 'null' && categoryId.isNotEmpty) {
         query = query.eq('category_id', categoryId);
+      }
+
+      // Filter nach Content-Typ
+      if (onlyYoutube != null) {
+        if (onlyYoutube) {
+          query = query.not('youtube_id', 'is', null);
+        } else {
+          query = query.is_('youtube_id', null);
+        }
       }
 
       final response = await query
@@ -67,6 +76,7 @@ class ReelService {
     }
   }
 
+  // --- LIKE ---
   Future<void> likeReel(String userId, String reelId) async {
     await _supabase.from('likes').upsert({
       'user_id': userId,
@@ -90,6 +100,7 @@ class ReelService {
     return (response as List).isNotEmpty;
   }
 
+  // --- DISLIKE ---
   Future<void> dislikeReel(String userId, String reelId) async {
     await _supabase.from('dislikes').upsert({
       'user_id': userId,

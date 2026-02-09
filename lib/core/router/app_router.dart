@@ -8,6 +8,7 @@ import '../../features/posts/screens/create_post_screen.dart';
 import '../../features/reels/screens/reels_screen.dart';
 import '../../features/reels/screens/create_reel_screen.dart';
 import '../../features/reels/screens/reel_category_choice_screen.dart';
+import '../../features/reels/screens/reel_type_choice_screen.dart';
 import '../../features/flashcards/screens/flashcard_sets_screen.dart';
 import '../../features/flashcards/screens/study_screen.dart';
 import '../../features/flashcards/screens/create_flashcard_set_screen.dart';
@@ -49,10 +50,18 @@ class AppRouter {
         ],
       ),
       GoRoute(
+        path: '/reels/type/:categoryId',
+        builder: (context, state) {
+          final categoryId = state.pathParameters['categoryId'];
+          return ReelTypeChoiceScreen(categoryId: categoryId);
+        },
+      ),
+      GoRoute(
         path: '/reels/feed',
         builder: (context, state) {
           final categoryId = state.uri.queryParameters['categoryId'];
-          return ReelsScreen(categoryId: categoryId);
+          final onlyYoutube = state.uri.queryParameters['onlyYoutube'] == 'true';
+          return ReelsScreen(categoryId: categoryId, onlyYoutube: onlyYoutube);
         },
       ),
       GoRoute(

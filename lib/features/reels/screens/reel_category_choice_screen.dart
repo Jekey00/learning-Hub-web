@@ -38,7 +38,7 @@ class _ReelCategoryChoiceScreenState extends State<ReelCategoryChoiceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Wähle ein Thema'),
+        title: const Text('Thema wählen'),
         centerTitle: true,
       ),
       body: _isLoading
@@ -55,16 +55,16 @@ class _ReelCategoryChoiceScreenState extends State<ReelCategoryChoiceScreen> {
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return _buildCategoryCard(
-                    title: 'Alle',
+                    title: 'Alle Themen',
                     icon: '🌐',
-                    onTap: () => context.push('/reels/feed'),
+                    onTap: () => context.push('/reels/type/all'),
                   );
                 }
                 final cat = _categories[index - 1];
                 return _buildCategoryCard(
                   title: cat['name'],
                   icon: cat['icon'] ?? '📚',
-                  onTap: () => context.push('/reels/feed?categoryId=${cat['id']}'),
+                  onTap: () => context.push('/reels/type/${cat['id']}'),
                 );
               },
             ),
