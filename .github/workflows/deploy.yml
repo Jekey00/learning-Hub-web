@@ -19,17 +19,14 @@ jobs:
           channel: 'stable'
 
       - name: Build Web App
-        env:
-          # Wir laden die Secrets in die Umgebung des Runners
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           flutter pub get
-          # Wir nutzen Anführungszeichen, um Fehler bei Sonderzeichen zu vermeiden
+          # Wir deaktivieren Wasm-Checks, um YouTube-Player Fehler zu vermeiden
           flutter build web \
             --base-href "/learning-Hub-web/" \
-            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
-            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+            --no-wasm-dry-run \
+            --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
+            --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
