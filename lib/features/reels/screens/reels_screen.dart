@@ -161,7 +161,7 @@ class ReelPlayer extends StatefulWidget {
 }
 
 class _ReelPlayerState extends State<ReelPlayer> {
-  late VideoPlayerController _videoController;
+  VideoPlayerController? _videoController;
   ChewieController? _chewieController;
   YoutubePlayerController? _youtubeController;
   bool _isInitialized = false;
@@ -183,11 +183,11 @@ class _ReelPlayerState extends State<ReelPlayer> {
     super.didUpdateWidget(oldWidget);
     if (_isInitialized) {
       if (!widget.isScreenActive) {
-        _videoController.pause();
+        _videoController?.pause();
         _youtubeController?.pause();
       } else if (widget.autoPlay && oldWidget.isScreenActive == false) {
         if (widget.reel.youtubeId == null) {
-          _videoController.play();
+          _videoController?.play();
         } else {
           _youtubeController?.play();
         }
@@ -292,7 +292,7 @@ class _ReelPlayerState extends State<ReelPlayer> {
   }
 
   Future<void> _initializePlayer() async {
-    if (widget.reel.youtubeId != null) {
+    if (widget.reel.youtubeId != null && widget.reel.youtubeId!.isNotEmpty) {
       _youtubeController = YoutubePlayerController(
         initialVideoId: widget.reel.youtubeId!,
         flags: YoutubePlayerFlags(
@@ -305,12 +305,12 @@ class _ReelPlayerState extends State<ReelPlayer> {
         ),
       );
       _isInitialized = true;
-    } else {
+    } else if (widget.reel.videoUrl.isNotEmpty) {
       _videoController = VideoPlayerController.networkUrl(Uri.parse(widget.reel.videoUrl));
-      await _videoController.initialize();
+      await _videoController!.initialize();
 
       _chewieController = ChewieController(
-        videoPlayerController: _videoController,
+        videoPlayerController: _videoController!,
         autoPlay: widget.autoPlay && widget.isScreenActive,
         looping: true,
         showControls: true,
@@ -334,13 +334,13 @@ class _ReelPlayerState extends State<ReelPlayer> {
       fit: StackFit.expand,
       children: [
         Center(
-          child: widget.reel.youtubeId != null
+          child: widget.reel.youtubeId != null && widget.reel.youtubeId!.isNotEmpty
               ? YoutubePlayer(
                   controller: _youtubeController!,
                   showVideoProgressIndicator: true,
                   progressIndicatorColor: Colors.blueAccent,
                 )
-              : Chewie(controller: _chewieController!),
+              : (_chewieController != null ? Chewie(controller: _chewieController!) : const Text('Video nicht verfügbar')),
         ),
         Positioned(
           bottom: 80,
@@ -432,7 +432,7 @@ class _ReelPlayerState extends State<ReelPlayer> {
 
   @override
   void dispose() {
-    _videoController.dispose();
+    _videoController?.dispose();
     _chewieController?.dispose();
     _youtubeController?.dispose();
     super.dispose();
